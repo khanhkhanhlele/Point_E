@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .point_cloud import PointCloud
-
+import plotly.graph_objs as go
 
 def plot_point_cloud(
     pc: PointCloud,
@@ -62,3 +62,30 @@ def plot_point_cloud(
                 ax.set_zlim3d(fixed_bounds[0][2], fixed_bounds[1][2])
 
     return fig
+def plot_3D(pc, axis_labels=False):
+    fig_plotly = go.Figure(
+        data=[
+            go.Scatter3d(
+                x=pc.coords[:, 0], y=pc.coords[:, 1], z=pc.coords[:, 2],
+                mode='markers',
+                marker=dict(
+                    size=2,
+                    color=['rgb({},{},{})'.format(r, g, b) for r, g, b in zip(pc.channels["R"], pc.channels["G"], pc.channels["B"])],
+                ),
+                # Thêm hovertext để hiển thị index của mỗi điểm
+                hovertext=[f"Index: {i}<br>Pos: ({x:.2f}, {y:.2f}, {z:.2f})" 
+                            for i, (x, y, z) in enumerate(pc.coords)],
+                hoverinfo='text',  # Hiển thị hover text khi hover
+            )
+        ],
+        layout=dict(
+            scene=dict(
+                xaxis=dict(visible= axis_labels),
+                yaxis=dict(visible= axis_labels),
+                zaxis=dict(visible= axis_labels)
+            )
+        ),
+    )
+    # Hiển thị đồ thị
+    fig_plotly.show(renderer="vscode")
+

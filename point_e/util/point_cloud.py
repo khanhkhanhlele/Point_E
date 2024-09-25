@@ -1,7 +1,7 @@
 import random
 from dataclasses import dataclass
 from typing import BinaryIO, Dict, List, Optional, Union
-
+import torch
 import numpy as np
 
 from .ply_util import write_ply
@@ -37,7 +37,7 @@ class PointCloud:
             with open(f, "rb") as reader:
                 return cls.load(reader)
         else:
-            obj = np.load(f)
+            obj = np.load(f, allow_pickle=True)
             keys = list(obj.keys())
             return PointCloud(
                 coords=obj["coords"],
@@ -172,3 +172,34 @@ class PointCloud:
                 k: np.concatenate([v, other.channels[k]], axis=0) for k, v in self.channels.items()
             },
         )
+        
+    # input is index of a point and number of neighbors, output is the index of the neighbors
+    def get_neighbors(self, index: int, num_neighbors: int) -> np.ndarray:
+        norms = np.sum(self.coords**2, axis=-1)
+        dists = norms + norms[index] - 2 * (self.coords @ self.coords[index])
+        return np.argsort(dists)[1:num_neighbors+1]
+    
+    #input is index of a point and number of neighbors return the point cloud of the neighbors
+    def get_neighbors_cloud(self, index: int, num_neighbors: int) -> "PointCloud":
+        indices = self.get_neighbors(index, num_neighbors)
+        return self.subsample(indices)
+    
+    # I would like to add a function with inputs: the index of a point, the number of neighbors, and a vector. I want to move the selected point along the given vector, and the neighboring points should also move such that the closer they are to the selected point, the more they follow the vector, with the movement gradually decreasing. The farthest neighbor in the set should not move at all.
+    def move_point(self, index: int, num_neighbors: int, vector: np.ndarray) -> "PointCloud":
+        neighbors = self.get_neighbors(index, num_neighbors)
+        new_coords = np.copy(self.coords)
+        vector = np.array(vector)
+        for i in np.append(neighbors, index):
+            new_coords[i] = self.coords[i] + vector * (1 - np.linalg.norm(self.coords[i] - self.coords[index]) / np.linalg.norm(self.coords[neighbors[-1]] - self.coords[index]))
+        return PointCloud(coords=new_coords, channels=self.channels)
+    
+    # I would like to add a function that takes a point cloud and returns a tensor with the coordinates and RGB values of the points. The tensor should have shape [1, 6, N], where N is the number of points. 
+    def to_tensor(self) -> torch.Tensor:
+        data = np.stack([preprocess(self.channels[name], name) for name in "RGB"], axis=-1)
+        return torch.tensor(np.concatenate([self.coords, data], axis=1).T).unsqueeze(0)
+    
+    
+    def fake_point_cloud(self, thres_hold = 0.28, scale = 0.2) -> "PointCloud":
+        coords = self.coords
+        coords[:, 2] = np.where(coords[:, 2] > thres_hold, thres_hold + (coords[:,2] - thres_hold)*scale, coords[:, 2])
+        return PointCloud(coords=coords, channels=self.channels)
