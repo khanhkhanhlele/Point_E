@@ -135,6 +135,7 @@ class PointCloudSampler:
                     stage_model_kwargs[k] = torch.cat([v, torch.zeros_like(v)], dim=0)
 
             if stage_use_karras:
+                
                 samples_it = karras_sample_progressive(
                     diffusion=diffusion,
                     model=model,
