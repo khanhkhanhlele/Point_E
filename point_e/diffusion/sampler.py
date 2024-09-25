@@ -120,7 +120,7 @@ class PointCloudSampler:
             self.s_churn,
             self.model_kwargs_key_filter,
         ):
-            print(samples)
+            
             stage_model_kwargs = model_kwargs.copy()
             if stage_key_filter != "*":
                 use_keys = set(stage_key_filter.split(","))
@@ -163,6 +163,7 @@ class PointCloudSampler:
                     clip_denoised=self.clip_denoised,
                 )
             for x in samples_it:
+                print(samples)
                 samples = x["pred_xstart"][:batch_size]
                 if "low_res" in stage_model_kwargs:
                     samples = torch.cat(
