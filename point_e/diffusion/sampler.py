@@ -136,6 +136,7 @@ class PointCloudSampler:
 
             if stage_use_karras:
                 samples_it = karras_sample_progressive(
+                    diffusion=diffusion,
                     model=model,
                     shape=sample_shape,
                     steps=stage_karras_steps,
