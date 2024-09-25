@@ -262,3 +262,4 @@ class PointCloudSampler:
             sigma_max=sigma_max,
             s_churn=s_churn,
         )
+    #
