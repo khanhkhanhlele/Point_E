@@ -120,6 +120,7 @@ class PointCloudSampler:
             self.s_churn,
             self.model_kwargs_key_filter,
         ):
+            print(samples)
             stage_model_kwargs = model_kwargs.copy()
             if stage_key_filter != "*":
                 use_keys = set(stage_key_filter.split(","))
