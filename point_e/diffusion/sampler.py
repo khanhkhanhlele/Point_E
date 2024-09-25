@@ -94,9 +94,9 @@ class PointCloudSampler:
         return samples
 
     def sample_batch_progressive(
-        self, batch_size: int, model_kwargs: Dict[str, Any], samples: torch.Tensor = None
+        self, batch_size: int, model_kwargs: Dict[str, Any], sample: torch.Tensor = None
     ) -> Iterator[torch.Tensor]:
-        samples = samples
+        samples = sample
         for (
             model,
             diffusion,
