@@ -196,10 +196,18 @@ class PointCloud:
     # I would like to add a function that takes a point cloud and returns a tensor with the coordinates and RGB values of the points. The tensor should have shape [1, 6, N], where N is the number of points. 
     def to_tensor(self) -> torch.Tensor:
         data = np.stack([preprocess(self.channels[name], name) for name in "RGB"], axis=-1)
-        return torch.tensor(np.concatenate([self.coords, data], axis=1).T).unsqueeze(0)
+        return torch.tensor(np.concatenate([self.coords, data], axis=1, dtype='float32').T).unsqueeze(0)
     
     
     def fake_point_cloud(self, thres_hold = 0.28, scale = 0.2) -> "PointCloud":
         coords = self.coords
         coords[:, 2] = np.where(coords[:, 2] > thres_hold, thres_hold + (coords[:,2] - thres_hold)*scale, coords[:, 2])
         return PointCloud(coords=coords, channels=self.channels)
+
+    # add noise to the point cloud 
+    def add_noise(self, noise = 0.01) -> "PointCloud":
+        coords = self.coords
+        coords = coords + np.random.normal(0, noise, coords.shape)
+        return PointCloud(coords=coords, channels=self.channels)
+
+    
